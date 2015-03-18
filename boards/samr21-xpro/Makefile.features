@@ -5,7 +5,6 @@ FEATURES_PROVIDED += cpp
 FEATURES_PROVIDED += periph_timer
 FEATURES_PROVIDED += periph_uart
 FEATURES_PROVIDED += periph_i2c
-FEATURES_PROVIDED += cpp
 FEATURES_PROVIDED += periph_rtc
 FEATURES_PROVIDED += periph_cpuid
 FEATURES_MCU_GROUP = cortex_m0
