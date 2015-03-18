@@ -124,7 +124,7 @@ int ipv6_send_packet(ipv6_hdr_t *packet, ipv6_addr_t *next_hop)
                                            nce->lladdr_len, (uint8_t *) packet, length) < 0) {
                 /* XXX: this is wrong, but until ND does work correctly,
                  *      this is the only way (aka the old way)*/
-                uint16_t raddr = dest->uint16[7];
+                uint16_t raddr = 0xffff; /* Broadcast message */
                 sixlowpan_lowpan_sendto(0, &raddr, 2, (uint8_t *) packet,
                                         length);
                 /* return -1; */
@@ -690,15 +690,7 @@ ipv6_addr_t *ipv6_addr_set_by_eui64(ipv6_addr_t *out, int if_id,
 
     if (net_if_get_eui64((net_if_eui64_t *) &out->uint8[8], if_id,
                          force_generation)) {
-#ifdef MODULE_SIXLOWPAN
-
-        if (!sixlowpan_lowpan_eui64_to_short_addr((net_if_eui64_t *)&out->uint8[8])) {
-            out->uint8[8] ^= 0x02;
-        }
-
-#else
         out->uint8[8] ^= 0x02;
-#endif
         return out;
     }
     else {

@@ -1,23 +1,22 @@
-/**
- * Provides prototypes for available shell commands
- *
+/*
  * Copyright (C) 2014  INRIA.
  *
  * This file is subject to the terms and conditions of the GNU Lesser
  * General Public License v2.1. See the file LICENSE in the top level
  * directory for more details.
- *
- *
- *
- * @ingroup shell_commands
+ */
+
+/**
+ * @ingroup     sys_shell_commands
  * @{
- * @file    shell_commands.c
- * @brief   sets up the system shell command struct
- * @author  Oliver Hahm <oliver.hahm@inria.fr>
- * @author  Zakaria Kasmi <zkasmi@inf.fu-berlin.de>
- * @author  Ludwig Ortmann <ludwig.ortmann@fu-berlin.de>
  *
- * @note    $Id: shell_commands.c 3855 2013-09-05 12:54:57 kasmi $
+ * @file
+ * @brief       Provides prototypes and sets up available shell commands
+ *
+ * @author      Oliver Hahm <oliver.hahm@inria.fr>
+ * @author      Zakaria Kasmi <zkasmi@inf.fu-berlin.de>
+ * @author      Ludwig Ortmann <ludwig.ortmann@fu-berlin.de>
+ *
  * @}
  */
 
@@ -151,6 +150,15 @@ extern void _mersenne_init(int argc, char **argv);
 extern void _mersenne_get(int argc, char **argv);
 #endif
 
+#ifdef MODULE_NG_NETIF
+#ifndef MODULE_NET_IF
+extern void _netif_config(int argc, char **argv);
+#endif
+#ifndef MODULE_TRANSCEIVER
+extern void _netif_send(int argc, char **argv);
+#endif
+#endif
+
 const shell_command_t _shell_command_list[] = {
     {"reboot", "Reboot the node", _reboot_handler},
 #ifdef MODULE_CONFIG
@@ -243,6 +251,18 @@ const shell_command_t _shell_command_list[] = {
 #endif
 #ifdef CPU_X86
     {"lspci", "Lists PCI devices", _x86_lspci},
+#endif
+#ifdef MODULE_NG_NETIF
+#ifndef MODULE_NET_IF
+    {
+        "ifconfig",
+        "Configures a network interface\n\nusage: %s [<if_id> set <key> <value>]]",
+        _netif_config
+    },
+#endif
+#ifndef MODULE_TRANSCEIVER
+    {"txtsnd", "send raw data", _netif_send },
+#endif
 #endif
     {NULL, NULL, NULL}
 };

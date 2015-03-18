@@ -37,11 +37,10 @@ static rpl_parent_t parents[RPL_MAX_PARENTS];
 
 void rpl_trickle_send_dio(void *args)
 {
-    (void) args;
     ipv6_addr_t mcast;
 
     ipv6_addr_set_all_rpl_nodes_addr(&mcast);
-    rpl_send_DIO(&mcast);
+    rpl_send_DIO((rpl_dodag_t *) args, &mcast);
 }
 
 void rpl_instances_init(void)
@@ -87,11 +86,8 @@ rpl_instance_t *rpl_get_my_instance(void)
     return NULL;
 }
 
-rpl_dodag_t *rpl_new_dodag(uint8_t instanceid, ipv6_addr_t *dodagid)
+rpl_dodag_t *rpl_new_dodag(rpl_instance_t *inst, ipv6_addr_t *dodagid)
 {
-    rpl_instance_t *inst;
-    inst = rpl_get_instance(instanceid);
-
     if (inst == NULL) {
         DEBUGF("Error - No instance found for id %d. This should not happen\n",
                instanceid);
@@ -110,6 +106,7 @@ rpl_dodag_t *rpl_new_dodag(uint8_t instanceid, ipv6_addr_t *dodagid)
             dodag->ack_received = true;
             dodag->dao_counter = 0;
             dodag->trickle.callback.func = &rpl_trickle_send_dio;
+            dodag->trickle.callback.args = dodag;
             memcpy(&dodag->dodag_id, dodagid, sizeof(*dodagid));
             return dodag;
         }
@@ -288,7 +285,7 @@ rpl_parent_t *rpl_find_preferred_parent(void)
     if (!rpl_equal_id(&my_dodag->my_preferred_parent->addr, &best->addr)) {
         if (my_dodag->mop != RPL_MOP_NO_DOWNWARD_ROUTES) {
             /* send DAO with ZERO_LIFETIME to old parent */
-            rpl_send_DAO(&my_dodag->my_preferred_parent->addr, 0, false, 0);
+            rpl_send_DAO(my_dodag, &my_dodag->my_preferred_parent->addr, 0, false, 0);
         }
 
         my_dodag->my_preferred_parent = best;
@@ -338,7 +335,7 @@ void rpl_join_dodag(rpl_dodag_t *dodag, ipv6_addr_t *parent, uint16_t parent_ran
 {
     rpl_dodag_t *my_dodag;
     rpl_parent_t *preferred_parent;
-    my_dodag = rpl_new_dodag(dodag->instance->id, &dodag->dodag_id);
+    my_dodag = rpl_new_dodag(dodag->instance, &dodag->dodag_id);
 
     if (my_dodag == NULL) {
         return;
@@ -358,6 +355,11 @@ void rpl_join_dodag(rpl_dodag_t *dodag, ipv6_addr_t *parent, uint16_t parent_ran
     my_dodag->lifetime_unit = dodag->lifetime_unit;
     my_dodag->version = dodag->version;
     my_dodag->grounded = dodag->grounded;
+    my_dodag->prefix_length = dodag->prefix_length;
+    my_dodag->prefix = dodag->prefix;
+    my_dodag->prefix_valid_lifetime = dodag->prefix_valid_lifetime;
+    my_dodag->prefix_preferred_lifetime = dodag->prefix_preferred_lifetime;
+    my_dodag->prefix_flags = dodag->prefix_flags;
     my_dodag->joined = 1;
 
     preferred_parent = rpl_new_parent(my_dodag, parent, parent_rank);
